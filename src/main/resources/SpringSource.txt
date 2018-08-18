@@ -1,0 +1,68 @@
+Spring容器的refresh()[创建刷新]
+1、prepareRefresh()刷新的预处理
+    1)、initPropertySources()初始化一些属性设置，子类自定义个性化的属性设置方法
+    2)、getEnvironment().validateRequiredProperties();校验属性的合法等
+    3)、this.earlyApplicationEvents = new LinkedHashSet<>();保存容器中早期的一些事件
+2、obtainFreshBeanFactory();获取BeanFactory
+    1)、refreshBeanFactory();刷新[创建]BeanFactory
+        创建一个this.beanFactory = new DefaultListableBeanFactory()；
+        设置id；
+    2)、getBeanFactory();返回刚才GenericApplicationContext创建的BeanFactory对象
+    3)、将创建的BeanFactory[DefaultListableBeanFactory]返回
+3、PrepareBeanFactory(beanFactory);beanFactory的预准备工作（BeanFactory进行一些设置）
+    1)、设置BeanFactory的类加载器、支持表达式解析器。。。
+    2)、添加部分BeanPostProcessor[ApplicationContextAwareProcessor]
+    3)、设置忽略的自动装配的接口EnvironmentAware。。。。。
+    4)、注册可以解析的自动装配，我们能直接在任何组件中自动注入，
+    BeanFactory、ResourceLoader、ApplicationEventPublisher、ApplicationContext
+    5)、添加BeanPostProcessor[ApplicationListenerDetector]
+    6)、添加编译时的AspectJ
+    7)、给BeanFactory中注册中的一些能用的组件；
+        environment[ConfigurableEnvironment]
+        systemProperties[Map<String, Object> getSystemProperties()]
+        systemEnvironment[Map<String, Object> getSystemEnvironment()]
+4、postProcessBeanFactory(beanFactory);BeanFactory准备工作完成后进行的后置处理工作；
+    1)、子类通过重写这个方法来在BeanFactory创建并预准备完成以后做进一步的设置
+=============================以上是BeanFactory的创建以及预准备工作=========================================
+5、invokeBeanFactoryPostProcessors(beanFactory);执行BeanFactoryPostProcessor；
+    BeanFactoryPostProcessor;BeanFactory的后置处理器，在BeanFactory标准初始化之后执行的
+    两个接口：BeanFactoryPostProcessor、BeanDefinitionRegistryPostProcessor
+    1)、执行BeanDefinitionRegistryPostProcessor的方法；
+        1)、获取所有的BeanDefinitionRegistryPostProcessor；
+        2)、先执行实现了PriorityOrdered优先级接口的BeanDefinitionRegistryPostProcessor
+            postProcessBeanDefinitionRegistry(registry)
+        3)、再执行实现了Ordered顺序接口的BeanDefinitionRegistryPostProcessor
+            postProcessBeanDefinitionRegistry(registry)
+        4)、最后执行没有实现任何优先级或者是顺序接口的BeanDefinitionRegistryPostProcessor；
+            postProcessBeanDefinitionRegistry(registry)
+    2)、再执行BeanFactoryPostProcessor的方法
+        1)、获取所有的BeanDefinitionRegistryPostProcessor；
+                2)、先执行实现了PriorityOrdered优先级接口的BeanFactoryPostProcessor
+                    postProcessBeanDefinitionRegistry(registry)
+                3)、再执行实现了Ordered顺序接口的BeanFactoryPostProcessor
+                    postProcessBeanDefinitionRegistry(registry)
+                4)、最后执行没有实现任何优先级或者是顺序接口的BeanFactoryPostProcessor
+                    postProcessBeanDefinitionRegistry(registry)
+
+6、registerBeanPostProcessors(beanFactory);注册BeanPostProcessor(Bean的后置处理器)[intercept bean creation]
+    不同类型的BeanPostProcessor，在Bean创建前后的执行时机不一样
+    BeanPostProcessor、DestructionAwareBeanPostProcessor、InstantiationAwareBeanPostProcessor
+    SmartInstantiationAwareBeanPostProcessor、MergedBeanDefinitionPostProcessor
+    1)、获取所有的BeanPostProcessor，后置处理器都默认可以通过PriorityOrdered、Ordered接口来执行优先级
+    2)、先注册PriorityOrdered优先级接口的BeanPostProcessor;
+        把每一个BeanPostProcessor,添加到BeanFactory中
+        beanFactory.addBeanPostProcessor(PostProcessor);
+    3)、再注册Ordered顺序接口的BeanPostProcessor;
+    4)、最后注册没有实现任何接口的BeanPostProcessor;
+    5)、最终注册MergedBeanDefinitionPostProcessor
+    6)、注册一个ApplicationListenerDetector，来在Bean创建完成后检查是否是ApplicationListener，如果是
+        this.applicationContext.addApplicationListener((ApplicationListener<?>) bean);
+
+
+
+
+
+
+
+
+
